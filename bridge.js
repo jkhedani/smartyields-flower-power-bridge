@@ -134,10 +134,10 @@ console.log('Starting...');
 var loopCounter = 1;
 var loopTimeout = 1;
 var loopStartTimestamp = Date.now();
-var bridge = function() {
-
+var bridge = function(peripheralID) {
+	var deferred = Q.defer();
 	console.log('Searching...');
-	FlowerPower.discover(function(flowerPower) {
+	FlowerPower.discoverById(peripheralID, function(flowerPower) {
 		console.log('Found! ' + flowerPower.uuid);
 		flowerPower.connectAndSetup(function(error) {
 
@@ -156,17 +156,28 @@ var bridge = function() {
 				console.log('Air Temp: '+airTemperature);
 				loopCounter++;
 				flowerPower.disconnect(function(error) {
-					console.log('Bye. (see you in '+loopTimeout+'  minutes)');
-					setTimeout(bridge, parseInt(loopTimeout) * 60 * 1000);
+					console.log('Disconnected.');
+					deferred.resolve('done');
+					//setTimeout(bridge, parseInt(loopTimeout) * 60 * 1000);
 				});
 			});
 		});
 
 	});
-
+	return deferred.promise;
 };
 
 // Start script
-bridge();
+var validPeripherals = [
+	'9003b7e7de99',
+	'a0143da0ddaf'
+];
 
+function run() {
+	bridge(validPeripherals[0]).then(function() {
+		bridge(validPeripherals[1]);
+	});
+	setTimeout(run, 30000);
+};
 
+run();
