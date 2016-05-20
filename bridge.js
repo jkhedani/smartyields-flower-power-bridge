@@ -134,7 +134,7 @@ console.log('Starting...');
 var loopCounter = 1;
 var loopTimeout = 1;
 var loopStartTimestamp = Date.now();
-var bridge = function() {
+setInterval( function() {
 
 	console.log('Searching...');
 	FlowerPower.discover(function(flowerPower) {
@@ -157,16 +157,10 @@ var bridge = function() {
 				loopCounter++;
 				flowerPower.disconnect(function(error) {
 					console.log('Bye. (see you in '+loopTimeout+'  minutes)');
-					setTimeout(bridge, parseInt(loopTimeout) * 60 * 1000);
 				});
 			});
 		});
 
 	});
 
-};
-
-// Start script
-bridge();
-
-
+}, 10000);
