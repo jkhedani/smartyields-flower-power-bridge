@@ -3,8 +3,11 @@
  */
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
+var request = require('request');
 var loopCounter = 1; // Counts the number of times the loop has completed
-var loopStartTimestamp = Date.now();
+var loopStartTimestamp = Date.now(); //  Grabs the current UNIX time
+var urlData = "";
+
 
 /**
  * Configuration
@@ -17,7 +20,9 @@ var validPeripherals = [
 ];
 // Set the interval time in minutes you want to query devices
 var loopTimeout = 5;
-
+// Set the api url
+var apiURL = 'https://api.smartyields.com/v1/telemetry/inbound/parrot/fp/?vndr=parrot&mod=fp';
+var SY_API_TOKEN = "bc07d758a7d71560821037cafc42f57f";
 
 
 /**
@@ -165,15 +170,42 @@ var bridge = function(peripheralID) {
 			]).spread( function(sunlight, soilM, soilEC, soilTemperature, airTemperature) {
 				console.log('This program has run: '+loopCounter+' times since ' + loopStartTimestamp);
 				console.log('Sunlight: '+sunlight);
+				urlData = urlData + "&par_umole_m2s="+sunlight;
+
 				console.log('Soil Moisture: '+soilM);
+				urlData = urlData + "&vwc_percent="+soilM;
+
 				console.log('Soil EC: '+soilEC);
+				urlData = urlData + "&conductivity="+soilEC;
+
 				console.log('Soil Temperature: '+soilTemperature);
+				urlData = urlData + "&soilTemp="+soilTemperature;
+
 				console.log('Air Temp: '+airTemperature);
+				urlData = urlData + "&air_temperature_celcius="+airTemperature;
+
 				loopCounter++;
-				flowerPower.disconnect(function(error) {
-					console.log('Disconnected.');
-					deferred.resolve('done');
+
+				// Construct API URL
+				var _url = apiURL+ "&hwID=" +peripheralID+ "&token=" +SY_API_TOKEN+ urlData;
+				console.log(_url);
+
+				// GET data
+				request(_url, function(error, response, body) {
+					if ( !error && response.statusCode === 200 ) {
+						console.log(body);
+						flowerPower.disconnect(function(error) {
+                		                        console.log('Disconnected.');
+        	                	                deferred.resolve('done');
+	                               		});
+					} else {
+						console.log(error);
+					}
 				});
+				// flowerPower.disconnect(function(error) {
+				//	console.log('Disconnected.');
+				//	deferred.resolve('done');
+				//});
 			});
 		});
 
