@@ -1,8 +1,12 @@
-// Init
+/**
+ * Init
+ */
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
 
-// Services & Characteristic IDs
+/**
+ * Services & Characteristic IDs
+ */
 var LIVE_SERVICE_UUID                       = '39e1fa0084a811e2afba0002a5d5c51b';
 var CALIBRATION_SERVICE_UUID                = '39e1fe0084a811e2afba0002a5d5c51b';
 
@@ -34,7 +38,13 @@ var HISTORY_CURRENT_SESSION_ID_UUID         = '39e1fc0484a811e2afba0002a5d5c51b'
 var HISTORY_CURRENT_SESSION_START_IDX_UUID  = '39e1fc0584a811e2afba0002a5d5c51b';
 var HISTORY_CURRENT_SESSION_PERIOD_UUID     = '39e1fc0684a811e2afba0002a5d5c51b';
 
-// Methods
+/**
+ * Methods
+ */
+
+// Read Sunlight
+// Converts to PAR (umol/m/s2)
+// TODO: Double check math
 FlowerPower.prototype.readSunlight = function(callback) {
 	var deferred = Q.defer();
 	var sunlight = this._characteristics[LIVE_SERVICE_UUID][SUNLIGHT_UUID];
@@ -46,17 +56,22 @@ FlowerPower.prototype.readSunlight = function(callback) {
 	return deferred.promise;
 };
 
+// Read Soil EC
+// Converted to mS/cm
 FlowerPower.prototype.readSoilEC = function(callback) {
         var deferred = Q.defer();
         var soilEC = this._characteristics[LIVE_SERVICE_UUID][SOIL_EC_UUID];
         soilEC.read(function(error, data) {
                 var rawValue = data.readUInt16LE(0) * 1.0;
-                var _soilEC = parseFloat(rawValue) / 177.1;
+                var _soilEC = parseFloat(rawValue) / 177.1; // Calculation made by CSC
                 deferred.resolve(_soilEC);
         });
         return deferred.promise;
 };
 
+// Read Air Temperature
+// Converted to C
+// TODO: Appears to be a cap on the data values. Remove when data can be conditioned.
 FlowerPower.prototype.readAirTemperature = function(callback) {
         var deferred = Q.defer();
         var airTemp = this._characteristics[LIVE_SERVICE_UUID][AIR_TEMPERATURE_UUID];
@@ -69,6 +84,27 @@ FlowerPower.prototype.readAirTemperature = function(callback) {
 		} else if (temperature > 55.0) {
 			temperature = 55.0;
 		}
+
+                deferred.resolve(temperature);
+        });
+        return deferred.promise;
+};
+
+// Read Soil Temperature
+// Converted to C
+// TODO: Appears to be a cap on the data values. Remove when data can be conditioned.
+FlowerPower.prototype.readSoilTemperature = function(callback) {
+        var deferred = Q.defer();
+        var soilTemp = this._characteristics[LIVE_SERVICE_UUID][SOIL_TEMPERATURE_UUID];
+        soilTemp.read(function(error, data) {
+                var rawValue = data.readUInt16LE(0) * 1.0;
+		var temperature = 0.00000003044 * Math.pow(rawValue, 3.0) - 0.00008038 * Math.pow(rawValue, 2.0) + rawValue * 0.1149 - 30.449999999999999;
+
+                if (temperature < -10.0) {
+                        temperature = -10.0;
+                } else if (temperature > 55.0) {
+                        temperature = 55.0;
+                }
 
                 deferred.resolve(temperature);
         });
@@ -94,36 +130,43 @@ FlowerPower.prototype.readSoilMoisture = function(callback) {
 };
 
 // Bridge
-
 console.log('Starting...');
 var loopCounter = 1;
+var loopTimeout = 1;
+var loopStartTimestamp = Date.now();
+var bridge = function() {
 
-setInterval(function() {
+	console.log('Searching...');
+	FlowerPower.discover(function(flowerPower) {
+		console.log('Found! ' + flowerPower.uuid);
+		flowerPower.connectAndSetup(function(error) {
 
-console.log('Searching...');
-FlowerPower.discover(function(flowerPower) {
-	console.log('Found! ' + flowerPower.uuid);
-	flowerPower.connectAndSetup(function(error) {
-
-		Q.all([
-			flowerPower.readSunlight(),
-			flowerPower.readSoilMoisture(),
-			flowerPower.readSoilEC(),
-			flowerPower.readAirTemperature()
-		]).spread( function(sunlight, soilM, soilEC, airTemperature) {
-			console.log('This program has run: '+loopCounter+' times');
-			console.log('Sunlight: '+sunlight);
-			console.log('Soil Moisture: '+soilM);
-			console.log('Soil EC: '+soilEC);
-			console.log('Air Temp: '+airTemperature);
-			loopCounter++;
-			flowerPower.disconnect(function(error) {
-				console.log('Bye. (see you in five minutes)');
+			Q.all([
+				flowerPower.readSunlight(),
+				flowerPower.readSoilMoisture(),
+				flowerPower.readSoilEC(),
+				flowerPower.readSoilTemperature(),
+				flowerPower.readAirTemperature()
+			]).spread( function(sunlight, soilM, soilEC, soilTemperature, airTemperature) {
+				console.log('This program has run: '+loopCounter+' times since ' + loopStartTimestamp);
+				console.log('Sunlight: '+sunlight);
+				console.log('Soil Moisture: '+soilM);
+				console.log('Soil EC: '+soilEC);
+				console.log('Soil Temperature: '+soilTemperature);
+				console.log('Air Temp: '+airTemperature);
+				loopCounter++;
+				flowerPower.disconnect(function(error) {
+					console.log('Bye. (see you in '+loopTimeout+'  minutes)');
+					setTimeout(bridge, parseInt(loopTimeout) * 60 * 1000);
+				});
 			});
 		});
+
 	});
 
-});
+};
+
+// Start script
+bridge();
 
 
-}, 5 * 60 * 1000 );
