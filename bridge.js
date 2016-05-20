@@ -6,7 +6,6 @@ var Q = require('q');
 var request = require('request');
 var loopCounter = 1; // Counts the number of times the loop has completed
 var loopStartTimestamp = Date.now(); //  Grabs the current UNIX time
-var urlData = "";
 
 
 /**
@@ -19,7 +18,7 @@ var validPeripherals = [
         'a0143da0ddaf'
 ];
 // Set the interval time in minutes you want to query devices
-var loopTimeout = 5;
+var loopTimeout = 15;
 // Set the api url
 var apiURL = 'https://api.smartyields.com/v1/telemetry/inbound/parrot/fp/?vndr=parrot&mod=fp';
 var SY_API_TOKEN = "bc07d758a7d71560821037cafc42f57f";
@@ -168,6 +167,9 @@ var bridge = function(peripheralID) {
 				flowerPower.readSoilTemperature(),
 				flowerPower.readAirTemperature()
 			]).spread( function(sunlight, soilM, soilEC, soilTemperature, airTemperature) {
+
+				var urlData = "";
+
 				console.log('This program has run: '+loopCounter+' times since ' + loopStartTimestamp);
 				console.log('Sunlight: '+sunlight);
 				urlData = urlData + "&par_umole_m2s="+sunlight;
