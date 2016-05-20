@@ -3,6 +3,22 @@
  */
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
+var loopCounter = 1; // Counts the number of times the loop has completed
+var loopStartTimestamp = Date.now();
+
+/**
+ * Configuration
+ */
+
+// List peripheral IDs
+var validPeripherals = [
+        '9003b7e7de99',
+        'a0143da0ddaf'
+];
+// Set the interval time in minutes you want to query devices
+var loopTimeout = 5;
+
+
 
 /**
  * Services & Characteristic IDs
@@ -111,6 +127,9 @@ FlowerPower.prototype.readSoilTemperature = function(callback) {
         return deferred.promise;
 };
 
+// Read Soil Moisture
+// Converted to cbars
+// TODO: Check output
 FlowerPower.prototype.readSoilMoisture = function(callback) {
 	var deferred = Q.defer();
 	var soilMoisture = this._characteristics[LIVE_SERVICE_UUID][SOIL_MOISTURE_UUID];
@@ -130,10 +149,6 @@ FlowerPower.prototype.readSoilMoisture = function(callback) {
 };
 
 // Bridge
-console.log('Starting...');
-var loopCounter = 1;
-var loopTimeout = 1;
-var loopStartTimestamp = Date.now();
 var bridge = function(peripheralID) {
 	var deferred = Q.defer();
 	console.log('Searching...');
@@ -158,7 +173,6 @@ var bridge = function(peripheralID) {
 				flowerPower.disconnect(function(error) {
 					console.log('Disconnected.');
 					deferred.resolve('done');
-					//setTimeout(bridge, parseInt(loopTimeout) * 60 * 1000);
 				});
 			});
 		});
@@ -167,17 +181,17 @@ var bridge = function(peripheralID) {
 	return deferred.promise;
 };
 
-// Start script
-var validPeripherals = [
-	'9003b7e7de99',
-	'a0143da0ddaf'
-];
-
-function run() {
+// Draw each bridge synchronously
+// TODO: Make this so it doesn't have to be edited.
+function drawBridges() {
+	console.log('Starting...');
 	bridge(validPeripherals[0]).then(function() {
-		bridge(validPeripherals[1]);
+		bridge(validPeripherals[1]).then(function() {
+			console.log('See you in '+ loopTimeout +' minutes.');
+		});
 	});
-	setTimeout(run, 30000);
+	setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
 };
 
-run();
+// Start bridge.
+drawBridges();
