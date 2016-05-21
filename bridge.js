@@ -172,19 +172,19 @@ var bridge = function(peripheralID) {
 
 				console.log('This program has run: '+loopCounter+' times since ' + loopStartTimestamp);
 				console.log('Sunlight: '+sunlight);
-				urlData = urlData + "&par_umole_m2s="+sunlight;
+				urlData = urlData + "&par_umole_m2s="+ parseFloat(Math.round(sunlight*10000)/10000).toFixed(4);
 
 				console.log('Soil Moisture: '+soilM);
-				urlData = urlData + "&vwc_percent="+soilM;
+				urlData = urlData + "&vwc_percent="+ parseFloat(Math.round(soilM*10000)/10000).toFixed(4);
 
 				console.log('Soil EC: '+soilEC);
-				urlData = urlData + "&conductivity="+soilEC;
+				urlData = urlData + "&conductivity="+ parseFloat(Math.round(soilEC*10000)/10000).toFixed(4);
 
 				console.log('Soil Temperature: '+soilTemperature);
-				urlData = urlData + "&soilTemp="+soilTemperature;
+				urlData = urlData + "&soilTemp="+ parseFloat(Math.round(soilTemperature*10000)/10000).toFixed(4);
 
 				console.log('Air Temp: '+airTemperature);
-				urlData = urlData + "&air_temperature_celcius="+airTemperature;
+				urlData = urlData + "&air_temperature_celsius="+ parseFloat(Math.round(airTemperature*10000)/10000).toFixed(4);
 
 				loopCounter++;
 
@@ -219,13 +219,79 @@ var bridge = function(peripheralID) {
 // TODO: Make this so it doesn't have to be edited.
 function drawBridges() {
 	console.log('Starting...');
-	bridge(validPeripherals[0]).then(function() {
-		bridge(validPeripherals[1]).then(function() {
+
+    if ( validPeripherals.length === 1 ) {
+
+        bridge(validPeripherals[0]).then(function() {
 			console.log('See you in '+ loopTimeout +' minutes.');
-		});
-	});
-	setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
-};
+    	});
+
+    } else if ( validPeripherals.length === 2 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+    			console.log('See you in '+ loopTimeout +' minutes.');
+    		});
+    	});
+
+    } else if ( validPeripherals.length === 3 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+        			console.log('See you in '+ loopTimeout +' minutes.');
+                });
+            });
+    	});
+
+    } else if ( validPeripherals.length === 4 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+            			console.log('See you in '+ loopTimeout +' minutes.');
+                    });
+                });
+            });
+    	});
+
+
+    } else if ( validPeripherals.length === 5 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                			console.log('See you in '+ loopTimeout +' minutes.');
+                        });
+                    });
+                });
+            });
+    	});
+
+    } else if ( validPeripherals.length === 6 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                            bridge(validPeripherals[5]).then(function() {
+                    			console.log('See you in '+ loopTimeout +' minutes.');
+                            });
+                        });
+                    });
+                });
+            });
+    	});
+
+    }
+
+    setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
+
+}
 
 // Start bridge.
 drawBridges();
