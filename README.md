@@ -18,6 +18,10 @@ npm (*)
 		$ cd sy-bridge
 		$ npm install
 
-3. Start the bridge!
+3. Create your configuration and modify your settings:
+
+		$ mv config.example.json config.json
+
+4. Start the bridge!
 
 		$ node bridge.js
