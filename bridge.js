@@ -4,24 +4,21 @@
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
 var request = require('request');
+var configuration = require('./config.json');
 var loopCounter = 1; // Counts the number of times the loop has completed
 var loopStartTimestamp = Date.now(); //  Grabs the current UNIX time
-
+var apiURL = 'https://api.smartyields.com/v1/telemetry/inbound/parrot/fp/?vndr=parrot&mod=fp';
 
 /**
  * Configuration
  */
 
 // List peripheral IDs
-var validPeripherals = [
-        '9003b7e7de99',
-        'a0143da0ddaf'
-];
+var validPeripherals = configuration.peripherals;
 // Set the interval time in minutes you want to query devices
-var loopTimeout = 15;
+var loopTimeout = configuration.loopTimeout;
 // Set the api url
-var apiURL = 'https://api.smartyields.com/v1/telemetry/inbound/parrot/fp/?vndr=parrot&mod=fp';
-var SY_API_TOKEN = "bc07d758a7d71560821037cafc42f57f";
+var SY_API_TOKEN = configuration.sy_api_token;
 
 
 /**
