@@ -284,6 +284,90 @@ function drawBridges() {
             });
     	});
 
+    } else if ( validPeripherals.length === 7 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                            bridge(validPeripherals[5]).then(function() {
+								bridge(validPeripherals[6]).then(function() {
+	                    			console.log('See you in '+ loopTimeout +' minutes.');
+	                            });
+                            });
+                        });
+                    });
+                });
+            });
+    	});
+
+    } else if ( validPeripherals.length === 8 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                            bridge(validPeripherals[5]).then(function() {
+								bridge(validPeripherals[6]).then(function() {
+									bridge(validPeripherals[7]).then(function() {
+		                    			console.log('See you in '+ loopTimeout +' minutes.');
+		                            });
+	                            });
+                            });
+                        });
+                    });
+                });
+            });
+    	});
+
+    } else if ( validPeripherals.length === 9 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                            bridge(validPeripherals[5]).then(function() {
+								bridge(validPeripherals[6]).then(function() {
+									bridge(validPeripherals[7]).then(function() {
+										bridge(validPeripherals[8]).then(function() {
+			                    			console.log('See you in '+ loopTimeout +' minutes.');
+			                            });
+		                            });
+	                            });
+                            });
+                        });
+                    });
+                });
+            });
+    	});
+
+    } else if ( validPeripherals.length === 10 ) {
+
+        bridge(validPeripherals[0]).then(function() {
+    		bridge(validPeripherals[1]).then(function() {
+                bridge(validPeripherals[2]).then(function() {
+                    bridge(validPeripherals[3]).then(function() {
+                        bridge(validPeripherals[4]).then(function() {
+                            bridge(validPeripherals[5]).then(function() {
+								bridge(validPeripherals[6]).then(function() {
+									bridge(validPeripherals[7]).then(function() {
+										bridge(validPeripherals[8]).then(function() {
+											bridge(validPeripherals[9]).then(function() {
+				                    			console.log('See you in '+ loopTimeout +' minutes.');
+				                            });
+			                            });
+		                            });
+	                            });
+                            });
+                        });
+                    });
+                });
+            });
+    	});
+
     }
 
     setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
