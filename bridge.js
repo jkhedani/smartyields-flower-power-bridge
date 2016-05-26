@@ -4,6 +4,7 @@
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
 var request = require('request');
+var CronJob = require('cron').CronJob;
 var configuration = require('./config.json');
 var loopCounter = 1; // Counts the number of times the loop has completed
 var loopStartTimestamp = Date.now(); //  Grabs the current UNIX time
@@ -355,7 +356,7 @@ function drawBridges() {
 								bridge(validPeripherals[6]).then(function() {
 									bridge(validPeripherals[7]).then(function() {
 										bridge(validPeripherals[8]).then(function() {
-											bridge(validPeripherals[]).then(function() {
+											bridge(validPeripherals[9]).then(function() {
 				                    			console.log('See you in '+ loopTimeout +' minutes.');
 				                            });
 			                            });
@@ -370,9 +371,24 @@ function drawBridges() {
 
     }
 
-    setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
+    // setTimeout(drawBridges, parseInt(loopTimeout) * 60 * 1000 );
 
 }
 
 // Start bridge.
-drawBridges();
+// Cron * * * * * = min hour day month day
+var job = new CronJob('30 * * * * *', function() {
+	/*
+	* Runs every weekday (Monday through Friday)
+	* at 11:30:00 AM. It does not run on Saturday
+	* or Sunday.
+	*/
+	console.log('Cron start...');
+}, function () {
+	/* This function is executed when the job stops */
+	console.log('Done.');
+},
+	true, /* Start the job right now */
+	'Pacific/Honolulu' /* Time zone of this job. */
+);
+// drawBridges();
