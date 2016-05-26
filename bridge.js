@@ -1,14 +1,24 @@
 /**
  * Init
  */
+var fs = require('fs');
 var FlowerPower = require('flower-power-ble');
 var Q = require('q');
 var request = require('request');
 var CronJob = require('cron').CronJob;
-var configuration = require('./config.json');
 var loopCounter = 1; // Counts the number of times the loop has completed
 var loopStartTimestamp = Date.now(); //  Grabs the current UNIX time
 var apiURL = 'https://api.smartyields.com/v1/telemetry/inbound/parrot/fp/?vndr=parrot&mod=fp';
+
+// Get configuration script
+var configuration;
+if ( fs.existsSync('config.json') ) {
+    console.log('Configuration found.');
+	configuration = require('./config.json');
+} else {
+	console.log('No config file. Copy the config.example.json over to a new and be sure to call it config.json');
+	return;
+}
 
 /**
  * Configuration
@@ -216,7 +226,7 @@ var bridge = function(peripheralID) {
 // Draw each bridge synchronously
 // TODO: Make this so it doesn't have to be edited.
 function drawBridges() {
-	console.log('Starting...');
+	console.log('Searching for devices...');
 
     if ( validPeripherals.length === 1 ) {
 
@@ -376,19 +386,15 @@ function drawBridges() {
 }
 
 // Start bridge.
-// Cron * * * * * = min hour day month day
-var job = new CronJob('30 * * * * *', function() {
-	/*
-	* Runs every weekday (Monday through Friday)
-	* at 11:30:00 AM. It does not run on Saturday
-	* or Sunday.
-	*/
-	console.log('Cron start...');
-}, function () {
-	/* This function is executed when the job stops */
-	console.log('Done.');
-},
-	true, /* Start the job right now */
-	'Pacific/Honolulu' /* Time zone of this job. */
-);
+var job = new CronJob({
+	cronTime: '*/'+loopTimeout+' * * * *',
+	onTick: function() {
+		console.log('Cron start...');
+		drawBridges();
+	},
+	start: true,
+	runOnInit: false
+});
+job.start();
+
 // drawBridges();
