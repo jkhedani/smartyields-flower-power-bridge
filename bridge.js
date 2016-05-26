@@ -75,12 +75,18 @@ var HISTORY_CURRENT_SESSION_PERIOD_UUID     = '39e1fc0684a811e2afba0002a5d5c51b'
 // TODO: Double check math
 FlowerPower.prototype.readSunlight = function(callback) {
 	var deferred = Q.defer();
-	var sunlight = this._characteristics[LIVE_SERVICE_UUID][SUNLIGHT_UUID];
-	sunlight.read(function(error, data) {
-		var rawValue = data.readUInt16LE(0) * 1.0;
-		var _sunlight = 0.08640000000000001 * (192773.17000000001 * Math.pow(rawValue, -1.0606619));
-		deferred.resolve(_sunlight);
-	});
+    try {
+        var sunlight = this._characteristics[LIVE_SERVICE_UUID][SUNLIGHT_UUID];
+        sunlight.read(function(error, data) {
+            var rawValue = data.readUInt16LE(0) * 1.0;
+            var _sunlight = 0.08640000000000001 * (192773.17000000001 * Math.pow(rawValue, -1.0606619));
+            deferred.resolve(_sunlight);
+        });
+    } catch(e) {
+        console.log('Sunlight undefined. '+e);
+        deferred.resolve(0.0);
+    }
+
 	return deferred.promise;
 };
 
@@ -88,12 +94,17 @@ FlowerPower.prototype.readSunlight = function(callback) {
 // Converted to mS/cm
 FlowerPower.prototype.readSoilEC = function(callback) {
         var deferred = Q.defer();
-        var soilEC = this._characteristics[LIVE_SERVICE_UUID][SOIL_EC_UUID];
-        soilEC.read(function(error, data) {
-                var rawValue = data.readUInt16LE(0) * 1.0;
-                var _soilEC = parseFloat(rawValue) / 177.1; // Calculation made by CSC
-                deferred.resolve(_soilEC);
-        });
+        try {
+            var soilEC = this._characteristics[LIVE_SERVICE_UUID][SOIL_EC_UUID];
+            soilEC.read(function(error, data) {
+                    var rawValue = data.readUInt16LE(0) * 1.0;
+                    var _soilEC = parseFloat(rawValue) / 177.1; // Calculation made by CSC
+                    deferred.resolve(_soilEC);
+            });
+        } catch(e) {
+            console.log('Soil undefined. '+e);
+            deferred.resolve(0.0);
+        }
         return deferred.promise;
 };
 
@@ -102,19 +113,22 @@ FlowerPower.prototype.readSoilEC = function(callback) {
 // TODO: Appears to be a cap on the data values. Remove when data can be conditioned.
 FlowerPower.prototype.readAirTemperature = function(callback) {
         var deferred = Q.defer();
-        var airTemp = this._characteristics[LIVE_SERVICE_UUID][AIR_TEMPERATURE_UUID];
-        airTemp.read(function(error, data) {
+        try {
+            var airTemp = this._characteristics[LIVE_SERVICE_UUID][AIR_TEMPERATURE_UUID];
+            airTemp.read(function(error, data) {
                 var rawValue = data.readUInt16LE(0) * 1.0;
-		var temperature = 0.00000003044 * Math.pow(rawValue, 3.0) - 0.00008038 * Math.pow(rawValue, 2.0) + rawValue * 0.1149 - 30.449999999999999;
-
-		if (temperature < -10.0) {
-			temperature = -10.0;
-		} else if (temperature > 55.0) {
-			temperature = 55.0;
-		}
-
+        		var temperature = 0.00000003044 * Math.pow(rawValue, 3.0) - 0.00008038 * Math.pow(rawValue, 2.0) + rawValue * 0.1149 - 30.449999999999999;
+        		if (temperature < -10.0) {
+        			temperature = -10.0;
+        		} else if (temperature > 55.0) {
+        			temperature = 55.0;
+        		}
                 deferred.resolve(temperature);
-        });
+            });
+        } catch(e) {
+            console.log('Air temperature undefined. '+e);
+            deferred.resolve(0.0);
+        }
         return deferred.promise;
 };
 
@@ -123,10 +137,11 @@ FlowerPower.prototype.readAirTemperature = function(callback) {
 // TODO: Appears to be a cap on the data values. Remove when data can be conditioned.
 FlowerPower.prototype.readSoilTemperature = function(callback) {
         var deferred = Q.defer();
-        var soilTemp = this._characteristics[LIVE_SERVICE_UUID][SOIL_TEMPERATURE_UUID];
-        soilTemp.read(function(error, data) {
+        try {
+            var soilTemp = this._characteristics[LIVE_SERVICE_UUID][SOIL_TEMPERATURE_UUID];
+            soilTemp.read(function(error, data) {
                 var rawValue = data.readUInt16LE(0) * 1.0;
-		var temperature = 0.00000003044 * Math.pow(rawValue, 3.0) - 0.00008038 * Math.pow(rawValue, 2.0) + rawValue * 0.1149 - 30.449999999999999;
+                var temperature = 0.00000003044 * Math.pow(rawValue, 3.0) - 0.00008038 * Math.pow(rawValue, 2.0) + rawValue * 0.1149 - 30.449999999999999;
 
                 if (temperature < -10.0) {
                         temperature = -10.0;
@@ -135,7 +150,12 @@ FlowerPower.prototype.readSoilTemperature = function(callback) {
                 }
 
                 deferred.resolve(temperature);
-        });
+            });
+        } catch(e) {
+            console.log('Soil temperature undefined. '+e);
+            deferred.resolve(0.0);
+        }
+
         return deferred.promise;
 };
 
@@ -144,7 +164,8 @@ FlowerPower.prototype.readSoilTemperature = function(callback) {
 // TODO: Check output
 FlowerPower.prototype.readSoilMoisture = function(callback) {
 	var deferred = Q.defer();
-	var soilMoisture = this._characteristics[LIVE_SERVICE_UUID][SOIL_MOISTURE_UUID];
+	try {
+        var soilMoisture = this._characteristics[LIVE_SERVICE_UUID][SOIL_MOISTURE_UUID];
        	soilMoisture.read(function(error, data) {
 		var rawValue = data.readUInt16LE(0) * 1.0;
 		var soilMoisture = 11.4293 + (0.0000000010698 * Math.pow(rawValue, 4.0) - 0.00000152538 * Math.pow(rawValue, 3.0) +  0.000866976 * Math.pow(rawValue, 2.0) - 0.169422 * rawValue);
@@ -157,6 +178,10 @@ FlowerPower.prototype.readSoilMoisture = function(callback) {
 		}
 		deferred.resolve(soilMoisture);
         });
+    } catch(e) {
+        console.log('Soil moisture undefined. '+e);
+        deferred.resolve(0.0);
+    }
 	return deferred.promise;
 };
 
