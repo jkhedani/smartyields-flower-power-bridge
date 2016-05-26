@@ -355,7 +355,7 @@ function drawBridges() {
 								bridge(validPeripherals[6]).then(function() {
 									bridge(validPeripherals[7]).then(function() {
 										bridge(validPeripherals[8]).then(function() {
-											bridge(validPeripherals[9]).then(function() {
+											bridge(validPeripherals[]).then(function() {
 				                    			console.log('See you in '+ loopTimeout +' minutes.');
 				                            });
 			                            });
