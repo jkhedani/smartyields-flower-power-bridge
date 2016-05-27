@@ -1,0 +1,11 @@
+{
+	"apps": [{
+			"name": "sypi",
+			"script": "bridge.js",
+			"watch": true,
+			"env": {
+				"NODE_ENV": "production"
+			}
+		}
+	]
+}
