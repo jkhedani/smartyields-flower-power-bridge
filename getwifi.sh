@@ -1,41 +1,48 @@
 #!/bin/bash
-#Limited primary check to see if usb flash drive is mounted
-volume="/media/sypi"
-if mount|grep -o $volume; then
-echo "mounted"
-else
-echo "not mounted"
-fi
 
-#Check to see if usb device is present. If not, exit.
-set -e 									#abort if a command returns non successful (non-zero)
-ls -l /dev/disk/by-label | grep -c sd*  #check to see if disk starting with sd is present.
+while [ "$(nmcli -t -f WIFI,STATE g)" = 'enabled:disconnected' ]
+do
+	#Limited primary check to see if usb flash drive is mounted
+	volume="/media/sypi"
+	if mount|grep -o $volume; then
+		echo "mounted"
+	else
+	echo "not mounted"
+	fi
+
+	#Check to see if usb device is present. If not, exit.
+	set -e 									#abort if a command returns non successful (non-zero)
+	ls -l /dev/disk/by-label | grep -c sd*  #check to see if disk starting with sd is present.
 									    #returns the count of grep so 0 if none
-set +e 								    #undo set -e
+	set +e 								    #undo set -e
 
-#A little more robust, grabs the last word including partition. i.e. sda1
-blk=$(ls -l /dev/disk/by-label | grep sd* | grep -oE '[^/]+$')
+	#A little more robust, grabs the last word including partition. i.e. sda1
+	blk=$(ls -l /dev/disk/by-label | grep sd* | grep -oE '[^/]+$')
 
-#Get the mountpoint as a variable
-mntpnt=$(lsblk --nodeps /dev/$blk  -o MOUNTPOINT -n)
-echo $mntpnt 							#print where the usb flash drive is mounted
+	#Get the mountpoint as a variable
+	mntpnt=$(lsblk --nodeps /dev/$blk  -o MOUNTPOINT -n)
+	echo $mntpnt 							#print where the usb flash drive is mounted
 
-#Get WiFi credentials file
-#(Assumes WiFi is in the file name)
-loc=$(find $mntpnt -iname '*WiFi*.txt')
-echo $loc
+	#Get WiFi credentials file
+	#(Assumes WiFi is in the file name)
+	loc=$(find $mntpnt -iname '*WiFi*.txt')
+	echo $loc
 
-#Get SSID (not case sensitive but needs ssid and password, delimited by semicolon
-ssid=$(grep -i 'SSID' $loc | cut -f2- -d':')
-pw=$(grep -i 'Password' $loc | cut -f2- -d':')
-echo $ssid $pw
+	#Get SSID (not case sensitive but needs ssid and password, delimited by semicolon
+	ssid=$(grep -i 'SSID' $loc | cut -f2- -d':')
+	pw=$(grep -i 'Password' $loc | cut -f2- -d':')
+	echo $ssid $pw
 
-#Use nmcli to connect using ssid and password
-nmcli d wifi connect $ssid password $pw iface wlan0
+	#Use nmcli to connect using ssid and password\
+	nmcli d wifi connect $ssid password $pw iface wlan0
+	sleep 5
 
-#Check which network you are on
-myssid=$(iwgetid -r)
-echo $myssid
+	#Check which network you are on
+	myssid=$(iwgetid -r)
+	echo $myssid
+done
+
+exit 0
 
 ####################
 #####  README  #####
