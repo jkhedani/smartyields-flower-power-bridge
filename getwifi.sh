@@ -21,20 +21,20 @@ do
 
 	#Get the mountpoint as a variable
 	mntpnt=$(lsblk --nodeps /dev/$blk  -o MOUNTPOINT -n)
-	echo $mntpnt 							#print where the usb flash drive is mounted
+	# echo $mntpnt 							#print where the usb flash drive is mounted
 
 	#Get WiFi credentials file
 	#(Assumes WiFi is in the file name)
 	loc=$(find $mntpnt -iname '*WiFi*.txt')
-	echo $loc
+	echo "Location:" $loc
 
 	#Get SSID (not case sensitive but needs ssid and password, delimited by semicolon
-	ssid=$(grep -i 'SSID' $loc | cut -f2- -d':')
-	pw=$(grep -i 'Password' $loc | cut -f2- -d':')
+	ssid=$(grep -i 'SSID' $loc | cut -f2- -d':' | sed 's/^.*://')
+	pw=$(grep -i 'Password' $loc | cut -f2- -d':' | sed 's/^.*://')
 	echo $ssid $pw
 
 	#Use nmcli to connect using ssid and password\
-	nmcli d wifi connect $ssid password $pw iface wlan0
+	nmcli d wifi connect $ssid password $pw wep-key-type key
 	sleep 5
 
 	#Check which network you are on
