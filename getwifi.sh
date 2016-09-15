@@ -44,6 +44,24 @@ done
 
 exit 0
 
+# Automatic Network Selector
+# Automatically connect to a WiFi network using a USB stick
+# By Justin Hedani
+
+# If USB stick and network text configuration is found
+# NOTE: This should be found lazily
+
+        # Store SSID, password and security protocol in variables
+        # Disable Network Manager
+        # Run enable WiFi
+
+# Else if not found, make sure network manager is enabled
+
+	# Re-enable Network Manager?
+
+# Endif
+
+
 ####################
 #####  README  #####
 ####################
