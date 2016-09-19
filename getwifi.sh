@@ -1,97 +1,95 @@
 #!/bin/bash
 
-while [ "$(nmcli -t -f WIFI,STATE g)" = 'enabled:disconnected' ]
+# Automatic WIFI enabler
+# @author By Justin Hedani
+# @notes
+#	- It has not been tested but if there are two USB sticks attached
+#	  to the program, it may not work.
+#	- Program will die if it cannot connect to network within ~200 seconds
+
+
+isConfigured=false # This should be set to true to stop the program
+maxLoop=20 # The maximum number of times this program can run
+loopIndex=0 #increment the loop index
+
+while [ "$isConfigured" = "false" ]
 do
-	#Limited primary check to see if usb flash drive is mounted
-	volume="/media/sypi"
-	if mount|grep -o $volume; then
-		echo "mounted"
+
+	# Retrieve info about potentially connected USB drive
+	USBDriveNames=$(ls -l /dev/disk/by-id/usb* | sed 's/.*usb-\(.*\)-[0-9]:.*/\1/') # Find and retrieve the name of the drive
+	hasUSBDrive=${#USBDriveNames} # Just get the length of the name if it exists
+
+	# Since some stupid drives try to mount all kinds of helper crap, let's just mount them all.
+	for USBDriveName in "$USBDriveNames"
+	do
+		echo "Mounting drive $USBDriveName"
+		USBDriveMountPath=$(readlink -f /dev/disk/by-id/usb-$USBDriveName-0:0)
+		mount $USBDriveMountPath "/media/sypi"
+		sleep 2
+	done
+
+	# If the USB drive is connected...
+	if [ "$hasUSBDrive" -gt 0 ]
+	then
+
+		# Look for text file containing WIFI
+		credentialsFilePath=$(find /media/sypi -iname '*WIFI*.txt')
+		hasCredentials=${#credentialsFilePath}
+
+		if [ "$hasCredentials" -gt 0 ]
+		then
+
+			# Retrieve the credentials (not case sensitive but needs ssid and password, delimited by semicolon)
+        		ssid=$(grep -i 'SSID' $credentialsFilePath | cut -f2- -d':' | sed 's/^.*://')
+        		password=$(grep -i 'Password' $credentialsFilePath | cut -f2- -d':' | sed 's/^.*://')
+        		echo "SSID: $ssid"
+			echo "Password: $password"
+
+			# If the wifi is turned off, turn it on.
+			wifiState=$(nmcli -t -f WIFI g) # State of the physical hardware
+			if [ "$wifiState" = "disabled" ]
+			then
+				echo "Enabling WIFI..."
+				nmcli r wifi on
+				echo "WIFI on."
+			fi
+
+			# Run NMCLI script
+			nmcli d wifi connect $ssid password $password wep-key-type key
+			sleep 5
+
+			# Then check if we're connected or not
+			networkState=$(nmcli -t -f STATE g) # State of the units connection to the network
+			if [ "$networkState" = "connected" ]
+			then
+				echo "You are connected!"
+				isConfigured=true
+			fi
+
+		# Exit program if there is no credentials file
+		else
+			echo "No credentials file found."
+			break
+		fi
+
+	# If no USBs are present exit the program.
 	else
-	echo "not mounted"
+		echo "No USB drives are present."
+		break
 	fi
 
-	#Check to see if usb device is present. If not, exit.
-	set -e 									#abort if a command returns non successful (non-zero)
-	ls -l /dev/disk/by-label | grep -c sd*  #check to see if disk starting with sd is present.
-									    #returns the count of grep so 0 if none
-	set +e 								    #undo set -e
+	# Protect program from going rogue.
+	# Increment loop index
+	let "loopIndex++"
 
-	#A little more robust, grabs the last word including partition. i.e. sda1
-	blk=$(ls -l /dev/disk/by-label | grep sd* | grep -oE '[^/]+$')
+	# If we've loop through the program the max number of times, exit.
+	if [ "$maxLoop" -eq "$loopIndex" ]
+	then
+		break
+	fi
 
-	#Get the mountpoint as a variable
-	mntpnt=$(lsblk --nodeps /dev/$blk  -o MOUNTPOINT -n)
-	# echo $mntpnt 							#print where the usb flash drive is mounted
-
-	#Get WiFi credentials file
-	#(Assumes WiFi is in the file name)
-	loc=$(find $mntpnt -iname '*WiFi*.txt')
-	echo "Location:" $loc
-
-	#Get SSID (not case sensitive but needs ssid and password, delimited by semicolon
-	ssid=$(grep -i 'SSID' $loc | cut -f2- -d':' | sed 's/^.*://')
-	pw=$(grep -i 'Password' $loc | cut -f2- -d':' | sed 's/^.*://')
-	echo $ssid $pw
-
-	#Use nmcli to connect using ssid and password\
-	nmcli d wifi connect $ssid password $pw wep-key-type key
+	# sleep 5 seconds before trying again
 	sleep 5
-
-	#Check which network you are on
-	myssid=$(iwgetid -r)
-	echo $myssid
 done
 
 exit 0
-
-# Automatic Network Selector
-# Automatically connect to a WiFi network using a USB stick
-# By Justin Hedani
-
-# If USB stick and network text configuration is found
-# NOTE: This should be found lazily
-
-        # Store SSID, password and security protocol in variables
-        # Disable Network Manager
-        # Run enable WiFi
-
-# Else if not found, make sure network manager is enabled
-
-	# Re-enable Network Manager?
-
-# Endif
-
-
-####################
-#####  README  #####
-####################
-# 1. Setting up getwifi.sh needs three things
-# 2. In the flower-power-bridge repository you should find getwifi.sh
-# 		You will need to configure it to run on boot (see below)
-# 3. The Wifi text file with credentials must have “WiFi” in the filename (case-sensitive) 
-# 		and must have the following format.
-	# SSID:*********
-	# Password:*****
-
-# Getwifi.sh after configuring to run on boot will check to see if a usb flash drive is mounted (if not, exit)
-# and search for a textfile with “WiFi” in the filename. It will search for two parameters, ssid and password, 
-# (not case sensitive), and then use nmcli to login to that network.  
-
-####  Config to run on boot ####
-# Edit etc/rc.local to run getwifi.sh on boot
-# 		sudo nano /etc/rc.local
-# Change the code to include the following
-#
-# 		#This script is executed at the end of each multiuser runlevel 
-# 		/home/sypi/Desktop/sy-bridge2/getwifi.sh || exit 1 # Added by me 
-# 		exit 0
-#
-# Referenced here (http://askubuntu.com/questions/228304/how-do-i-run-a-script-at-start-up)
-
-# Note 1: it take about 1~2 minutes for the script to run and connect to wifi after being powered on
-# Note 2: Running the script in terminal gives some feedback (have to disable set -e). 
-# If lsblk error shows, it means that the usb flash drive wasn’t recognized 
-# (file system was different, more than one partition, etc). 
-
-# Now, with a usb flash drive plugged in, restart the pi and it should boot, 
-# and connect to specified network.
