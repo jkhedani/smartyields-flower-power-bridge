@@ -36,6 +36,8 @@ do
 		credentialsFilePath=$(find /media/sypi -iname '*WIFI*.txt')
 		hasCredentials=${#credentialsFilePath}
 
+		echo ${credentialsFilePath}
+
 		if [ "$hasCredentials" -gt 0 ]
 		then
 
